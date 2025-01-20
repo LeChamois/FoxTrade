@@ -26,6 +26,22 @@ def save_portfolio(dbw, wallet_id: str, portfolio: dict):
         # Need to implement update method in DB class
         pass
 
+def add_to_portfolio(dbw, wallet_id: str, symbol: str, quantity: int):
+    portfolio = get_portfolio(dbw, wallet_id)
+    if symbol in portfolio:
+        portfolio[symbol] += quantity
+    else:
+        portfolio[symbol] = quantity
+    save_portfolio(dbw, wallet_id, portfolio)
+
+def remove_from_portfolio(dbw, wallet_id: str, symbol: str, quantity: int):
+    portfolio = get_portfolio(dbw, wallet_id)
+    if symbol in portfolio:
+        portfolio[symbol] -= quantity
+        if portfolio[symbol] <= 0:
+            del portfolio[symbol]
+        save_portfolio(dbw, wallet_id, portfolio)
+
 def get_portfolio(dbw, wallet_id: str) -> dict:
     result = dbw.get_data_in_table('wallets', 'wallet_id', wallet_id)
     if result and 'portfolio' in result:

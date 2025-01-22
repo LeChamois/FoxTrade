@@ -19,6 +19,7 @@ Currently in development. Basic features and infrastructure are being establishe
 
 - LeChamois - Project initiator
 - 0N17 - Development collaborator
+- Others
 
 ## License
 MIT - License

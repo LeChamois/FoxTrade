@@ -2,6 +2,7 @@ from .dbmanager import DB
 import hashlib
 import binascii
 from .wallets import create_wallet
+from typing import *
 
 def init_account_db(dbpath: str) -> DB:
     """Initialize accounts database"""
@@ -37,26 +38,22 @@ def create_account(db: DB, dbw: DB, username: str, password: str, email: str) ->
             'email': email,
             'benefice': 0,
             'wallet_id': wallet_id,
-            'cash': 0
+            'cash': 50
         })
         return True
     return False
 
-def get_account(db: DB, username: str) -> dict:
-    """Retrieve account data by username"""
-    return db.get_data_in_table('accounts', 'username', username)
-
 def verify_account(db: DB, username: str, password: str) -> bool:
     """Verify account credentials"""
-    account = get_account(db, username)
+    account = db.get_account(db, username)
     if account:
         hashed_password = hash_password(password)
         return account['password'] == hashed_password
     return False
 
-def update_account(db: DB, username: str, updates: dict) -> bool:
-    """Update account fields"""
-    if account := get_account(db, username):
-        # TODO: Implement update method in DB class
-        return True
-    return False
+def update_wallet(self, wallet_id: str, portfolio: str):
+        """Update wallet portfolio"""
+        self.cursor.execute('UPDATE wallets SET portfolio = ? WHERE wallet_id = ?', 
+                          (portfolio, wallet_id))
+        self.conn.commit()
+

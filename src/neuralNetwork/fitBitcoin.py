@@ -1,12 +1,12 @@
 import yfinance as yf
-from main import NeuralNetwork
+from TradeTools.main import NeuralNetwork
 
 try:
     bot = NeuralNetwork.load('bitcoin')
 except:
     bot = NeuralNetwork()
 
-yf.
+
 
 
 bot.save()

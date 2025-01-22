@@ -5,6 +5,54 @@ import pandas as pd
 
 VALID_PERIODS = ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', 'max']
 
+def get_historical_prices(
+    ticker: str,
+    interval: str,  # e.g. '1m', '5m', '1h', '1d'
+    period: str = '1d',  # e.g. '1d', '5d', '1mo', '3mo'
+) -> Tuple[List[datetime], List[float]]:
+    """
+    Get historical prices with custom interval and period
+    
+    Args:
+        ticker: Stock symbol
+        interval: Time between data points (Xs, Xm, Xh, Xd)
+        period: Historical period to fetch
+    
+    Returns:
+        Tuple of (dates, prices) lists
+    """
+    try:
+        # Validate interval format
+        if len(interval) < 2:
+            raise ValueError("Invalid interval format")
+            
+        value = int(interval[:-1])
+        unit = interval[-1]
+        
+        if unit not in VALID_INTERVALS:
+            raise ValueError(f"Invalid interval unit. Must be one of: {list(VALID_INTERVALS.keys())}")
+            
+        if f"{value}{unit}" not in VALID_INTERVALS[unit]:
+            raise ValueError(f"Invalid interval value for unit {unit}")
+            
+        if period not in VALID_PERIODS:
+            raise ValueError(f"Invalid period. Must be one of: {VALID_PERIODS}")
+
+        # Fetch data
+        stock = yf.Ticker(ticker)
+        history = stock.history(interval=interval, period=period)
+        
+        if history.empty:
+            return ([], [])
+            
+        dates = history.index.tolist()
+        prices = history['Close'].tolist()
+        return (dates, prices)
+        
+    except Exception as e:
+        print(f"Error fetching historical data for {ticker}: {str(e)}")
+        return ([], [])
+
 def get_stock_price(ticker: str, period: str = '1d') -> Optional[float]:
     """Get current stock price from Yahoo Finance"""
     try:

@@ -1,10 +1,11 @@
+import json
 from typing import Literal
 import keras
 import numpy as np
 
-NeuralNetworkTupleOfModel = tuple[keras.Sequential, keras.Sequential, keras.Sequential, keras.Sequential]
+TupleModel = tuple[keras.Sequential, keras.Sequential, keras.Sequential, keras.Sequential]
 
-def getModel(vectors : int, vectorDimension : int = 500, outputLength : int = 500):
+def getModel(vectors : int, vectorDimension : int = 500, outputLength : int = 50):
     model = keras.models.Sequential([
         keras.Input(shape = (vectorDimension * vectors,)),
         keras.layers.Dense(outputLength * 8, activation='relu'),
@@ -18,9 +19,9 @@ def getModel(vectors : int, vectorDimension : int = 500, outputLength : int = 50
 class NeuralNetwork():
     def __init__(
             self,
-            inputDimension : int = 50000,
-            outputDimension : int = 500,
-            models : keras.Sequential | None = None
+            inputDimension : int = 50,
+            outputDimension : int = 50,
+            models : TupleModel | None = None
             ):
         if models is None:
             self.secondModel = getModel(4, inputDimension, outputDimension)
@@ -32,9 +33,9 @@ class NeuralNetwork():
             self.minuteModel = models[1]
             self.hourModel = models[2]
             self.dayModel = models[3]
-
         self.inputDim = inputDimension
         self.outputDim = outputDimension
+
 
     def sellOnSecond(self):
         ...
@@ -127,3 +128,25 @@ class NeuralNetwork():
             Y = np.array(Y)
             
             self.secondModel.fit(X, Y, epochs=epochs, batch_size=batchSize)
+    
+    def save(self, folderName):
+        self.secondModel.save(f'{folderName}/secondModel.keras')
+        self.minuteModel.save(f'{folderName}/minuteModel.keras')
+        self.hourModel.save(f'{folderName}/hourModel.keras')
+        self.dayModel.save(f'{folderName}/dayModel.keras')
+        with open(f'{folderName}/config.json', 'w') as file:
+            json.dump({
+                'inputDimension': self.inputDim,
+                'outputDimension': self.outputDim
+            }, file)
+    
+    def load(folderName):
+        models = (
+            keras.models.load_model(f'{folderName}/secondModel.keras'),
+            keras.models.load_model(f'{folderName}/minuteModel.keras'),
+            keras.models.load_model(f'{folderName}/hourModel.keras'),
+            keras.models.load_model(f'{folderName}/dayModel.keras'),
+        )
+        with open(f'{folderName}/config.json', 'r') as config:
+            config = json.load(config)
+        return NeuralNetwork(models=models, **config)

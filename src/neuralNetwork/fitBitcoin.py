@@ -6,7 +6,4 @@ try:
 except:
     bot = NeuralNetwork()
 
-
-
-
 bot.save()

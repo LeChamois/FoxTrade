@@ -1,5 +1,8 @@
-import mods.markets as markets
-import yfinance as yf
+import keras
+from termcolor import cprint
+import neuralNetwork.main as main
 
+main.getModel(4).save("file.keras")
 
-print(markets.get_historical_prices('BTC-USD', '1s', '5d'))
+model : keras.Sequential = keras.models.load_model("file.keras", compile=False)
+model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])

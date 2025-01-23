@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Literal
 import keras
 import numpy as np
@@ -13,13 +14,12 @@ def getModel(vectors : int, vectorDimension : int = 500, outputLength : int = 50
         keras.layers.Dense(outputLength * 2, activation='relu'),
         keras.layers.Dense(outputLength, activation='relu'),
     ])
-    model.compile(loss='mean_squared_error', optimizer='adam')
     return model
 
 class NeuralNetwork():
     def __init__(
             self,
-            inputDimension : int = 50,
+            inputDimension : int = 500,
             outputDimension : int = 50,
             models : TupleModel | None = None
             ):
@@ -130,6 +130,8 @@ class NeuralNetwork():
             self.secondModel.fit(X, Y, epochs=epochs, batch_size=batchSize)
     
     def save(self, folderName):
+        folderName = 'SavedBots/' + folderName
+        os.makedirs(folderName, exist_ok=True)
         self.secondModel.save(f'{folderName}/secondModel.keras')
         self.minuteModel.save(f'{folderName}/minuteModel.keras')
         self.hourModel.save(f'{folderName}/hourModel.keras')
@@ -141,12 +143,15 @@ class NeuralNetwork():
             }, file)
     
     def load(folderName):
+        folderName = 'SavedBots/' + folderName
         models = (
-            keras.models.load_model(f'{folderName}/secondModel.keras'),
-            keras.models.load_model(f'{folderName}/minuteModel.keras'),
-            keras.models.load_model(f'{folderName}/hourModel.keras'),
-            keras.models.load_model(f'{folderName}/dayModel.keras'),
+            keras.models.load_model(f'{folderName}/secondModel.keras', compile=False),
+            keras.models.load_model(f'{folderName}/minuteModel.keras', compile=False),
+            keras.models.load_model(f'{folderName}/hourModel.keras', compile=False),
+            keras.models.load_model(f'{folderName}/dayModel.keras', compile=False),
         )
+        for model in models:
+            model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
         with open(f'{folderName}/config.json', 'r') as config:
             config = json.load(config)
         return NeuralNetwork(models=models, **config)

@@ -2,13 +2,8 @@ import yfinance as yf
 from typing import Optional, Tuple, List, Dict
 from datetime import datetime
 import pandas as pd
-
-VALID_INTERVALS = {
-    's': ['1s', '5s', '15s', '30s'],
-    'm': ['1m', '5m', '15m', '30m'],
-    'h': ['1h', '2h', '4h', '6h'],
-    'd': ['1d', '5d']
-}
+import requests
+import pandas as pd
 
 VALID_PERIODS = ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', 'max']
 VALID_INTERVALS = {
@@ -21,50 +16,28 @@ VALID_INTERVALS = {
 def get_historical_prices(
     ticker: str,
     interval: str,  # e.g. '1m', '5m', '1h', '1d'
-    period: str = '1d',  # e.g. '1d', '5d', '1mo', '3mo'
-) -> Tuple[List[datetime], List[float]]:
-    """
-    Get historical prices with custom interval and period
-    
-    Args:
-        ticker: Stock symbol
-        interval: Time between data points (Xs, Xm, Xh, Xd)
-        period: Historical period to fetch
-    
-    Returns:
-        Tuple of (dates, prices) lists
-    """
-    try:
-        # Validate interval format
-        if len(interval) < 2:
-            raise ValueError("Invalid interval format")
-            
-        value = int(interval[:-1])
-        unit = interval[-1]
-        
-        if unit not in VALID_INTERVALS:
-            raise ValueError(f"Invalid interval unit. Must be one of: {list(VALID_INTERVALS.keys())}")
-            
-        if f"{value}{unit}" not in VALID_INTERVALS[unit]:
-            raise ValueError(f"Invalid interval value for unit {unit}")
-            
-        if period not in VALID_PERIODS:
-            raise ValueError(f"Invalid period. Must be one of: {VALID_PERIODS}")
+    limit: int = 1000,  # e.g. '1d', '5d', '1mo', '3mo'
+) -> List[float]:
 
-        # Fetch data
-        stock = yf.Ticker(ticker)
-        history = stock.history(interval=interval, period=period)
-        
-        if history.empty:
-            return ([], [])
-            
-        dates = history.index.tolist()
-        prices = history['Close'].tolist()
-        return (dates, prices)
-        
-    except Exception as e:
-        print(f"Error fetching historical data for {ticker}: {str(e)}")
-        return ([], [])
+    # Endpoint de l'API Binance pour les données de chandeliers
+    url = "https://api.binance.com/api/v3/klines"
+
+    params = {
+        "symbol": ticker,
+        "interval": interval,
+        "limit": limit  # Nombre de points de données
+    }
+
+    response = requests.get(url, params=params)
+
+    data = response.json()
+    
+    df = pd.DataFrame(data, columns=[
+        "timestamp", "open", "high", "low", "close", "volume", 
+        "close_time", "quote_asset_volume", "number_of_trades", 
+        "taker_buy_base_asset_volume", "taker_buy_quote_asset_volume", "ignore"
+    ])
+    return(df["close"].to_list())
 
 def get_stock_price(ticker: str, period: str = '1d') -> Optional[float]:
     """Get current stock price from Yahoo Finance"""

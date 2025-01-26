@@ -32,6 +32,12 @@ with kb.Listener(listen) as listener:
             list(getPrices("BTCUSDT", '1h', 550)),
             list(getPrices("BTCUSDT", '1d', 550)),
         )
+        """bot.speedTrain(
+            getPrices("BTCUSDT", '1s', 550),
+            getPrices("BTCUSDT", '1m', 550),
+            getPrices("BTCUSDT", '1h', 550),
+            getPrices("BTCUSDT", '1d', 550),
+        )"""
         if running:
             time.sleep(5)
 

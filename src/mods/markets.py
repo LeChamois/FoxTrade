@@ -1,5 +1,5 @@
 import yfinance as yf
-from typing import Optional, Tuple, List, Dict
+from typing import Generator, Optional, Tuple, List, Dict
 from datetime import datetime
 import pandas as pd
 import requests
@@ -16,7 +16,7 @@ def get_historical_prices(
     ticker: str,
     interval: str,  # e.g. '1m', '5m', '1h', '1d'
     limit: int = 1000,
-) -> List[float]:
+) ->  Generator[float, None, None]:
 
     # Endpoint de l'API Binance pour les données de chandeliers
     url = "https://api.binance.com/api/v3/klines"

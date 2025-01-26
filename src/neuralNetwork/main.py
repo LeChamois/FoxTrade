@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Literal
+from typing import Generator, Literal
 import keras
 import numpy as np
 
@@ -156,6 +156,71 @@ class NeuralNetwork():
             epochs=epochs,
             batch_size=batchSize
         )
+    
+    def speedTrain(
+            self,
+            seconds : Generator[float, None, None],
+            minutes : Generator[float, None, None],
+            hours : Generator[float, None, None],
+            days : Generator[float, None, None],
+            ):
+        
+        i = 0
+        SecondsX = []
+        for value in seconds:
+            SecondsX.append(value)
+            i+=1
+            if i >= self.inputDim:
+                break
+        SecondsY = []
+        for value in seconds:
+            SecondsY.append(value)
+        
+        i = 0
+        MinutesX = []
+        for value in minutes:
+            SecondsX.append(value)
+            MinutesX.append(value)
+            i+=1
+            if i >= self.inputDim:
+                break
+        MinutesY = []
+        for value in minutes:
+            SecondsY.append(value)
+            MinutesY.append(value)
+
+        i = 0
+        HoursX = []
+        for value in hours:
+            SecondsX.append(value)
+            MinutesX.append(value)
+            HoursX.append(value)
+            i+=1
+            if i >= self.inputDim:
+                break
+        HoursY = []
+        for value in hours:
+            SecondsY.append(value)
+            MinutesY.append(value)
+            HoursY.append(value)
+        
+        i = 0
+        DaysX = []
+        for value in days:
+            SecondsX.append(value)
+            MinutesX.append(value)
+            HoursX.append(value)
+            DaysX.append(value)
+            i+=1
+            if i >= self.inputDim:
+                break
+        DaysY = []
+        for value in days:
+            SecondsY.append(value)
+            MinutesY.append(value)
+            HoursY.append(value)
+            DaysY.append(value)
+        
     
     def save(self, folderName):
         folderName = 'SavedBots/' + folderName

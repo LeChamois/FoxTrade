@@ -36,7 +36,8 @@ def get_historical_prices(
         "close_time", "quote_asset_volume", "number_of_trades", 
         "taker_buy_base_asset_volume", "taker_buy_quote_asset_volume", "ignore"
     ])
-    return(df["close"].to_list())
+    for value in df["close"]:
+        yield float(value)
 
 def get_stock_price(ticker: str, period: str = '1d') -> Optional[float]:
     """Get current stock price from Yahoo Finance"""

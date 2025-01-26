@@ -1,8 +1,4 @@
-import keras
 from termcolor import cprint
-import neuralNetwork.main as main
+from mods.markets import get_historical_prices as getPrices
 
-main.getModel(4).save("file.keras")
-
-model : keras.Sequential = keras.models.load_model("file.keras", compile=False)
-model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+print(*getPrices('BTCUSDT', '1s', 20))

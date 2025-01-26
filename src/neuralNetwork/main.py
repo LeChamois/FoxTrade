@@ -4,6 +4,7 @@ from typing import Literal
 import keras
 import numpy as np
 
+
 TupleModel = tuple[keras.Sequential, keras.Sequential, keras.Sequential, keras.Sequential]
 
 def getModel(vectors : int, vectorDimension : int = 500, outputLength : int = 50):
@@ -28,6 +29,7 @@ class NeuralNetwork():
             self.minuteModel = getModel(3, inputDimension, outputDimension)
             self.hourModel = getModel(2, inputDimension, outputDimension)
             self.dayModel = getModel(1, inputDimension, outputDimension)
+            self.compile()
         else:
             self.secondModel = models[0]
             self.minuteModel = models[1]
@@ -109,95 +111,51 @@ class NeuralNetwork():
     
     def train(
             self,
-            values : list[float],
+            seconds : list,
+            minutes : list,
+            hours : list,
+            days : list,
             epochs : int = 100,
             batchSize : int = 32,
             ):
-        totalTrainable = 1+len(values)-(86400 * (self.inputDim+self.outputDim))
-        if totalTrainable < 1:
-            raise ValueError(
-                f"""
-                Not enough data to train.
-                given : {len(values)+1}
-                required : {86400 * (self.inputDim+self.outputDim)}
-                {-totalTrainable} values missing
-                """
-                )
-        else:
-            XSeconds = []
-            YSeconds = []
-            XMinutes = []
-            YMinutes = []
-            XHours = []
-            YHours = []
-            XDays = []
-            YDays = []
-            for i in range(totalTrainable):
+        if not(len(seconds) == len(minutes) == len(hours) == len(days) == self.inputDim+self.outputDim):
+            raise ValueError('Length of inputs must match input dimension + output dimension')
+        
+        separator = self.inputDim
+        Xseconds = seconds[:separator]
+        Xminutes = minutes[:separator]
+        Xhours = hours[:separator]
+        Xdays = days[:separator]
+        Yseconds = seconds[separator:]
+        Yminutes = minutes[separator:]
+        Yhours = hours[separator:]
+        Ydays = days[separator:]
 
-                sep = i+self.inputDim
-                XSeconds.append(values[i : sep])
-                YSeconds.append(values[sep : sep+self.outputDim])
 
-                XMinutes.append([])
-                YMinutes.append([])
-                sep = i+(self.inputDim*60)
-                for j in range(i, sep, 60):
-                    XMinutes[-1].append(values[j])
-                for j in range(sep, sep+(self.outputDim*60), 60):
-                    YMinutes[-1].append(values[j])
-                
-                XHours.append([])
-                YHours.append([])
-                sep = i+(self.inputDim*3600)
-                for j in range(i, sep, 3600):
-                    XHours[-1].append(values[j])
-                for j in range(sep, sep+(self.outputDim*3600), 3600):
-                    YHours[-1].append(values[j])
-                
-                XDays.append([])
-                YDays.append([])
-                sep = i+(self.inputDim*86400)
-                for j in range(i, sep, 86400):
-                    XDays[-1].append(values[j])
-                for j in range(sep, sep+(self.outputDim*86400), 86400):
-                    YDays[-1].append(values[j])
-
-            
-            self.secondModel.fit(
-                np.array([
-                    XSeconds[i] + XMinutes[i] + XHours[i] + XDays[i] for i in range(totalTrainable)
-                ]),
-                np.array([
-                    YSeconds[i] + YMinutes[i] + YHours[i] + YDays[i] for i in range(totalTrainable)
-                ]),
-                epochs=epochs, batch_size=batchSize
-            )
-            
-            self.minuteModel.fit(
-                np.array([
-                    XMinutes[i] + XHours[i] + XDays[i] for i in range(totalTrainable)
-                ]),
-                np.array([
-                    YMinutes[i] + YHours[i] + YDays[i] for i in range(totalTrainable)
-                ]),
-                epochs=epochs, batch_size=batchSize
-            )
-            
-            self.hourModel.fit(
-                np.array([
-                    XHours[i] + XDays[i] for i in range(totalTrainable)
-                ]),
-                np.array([
-                    YHours[i] + YDays[i] for i in range(totalTrainable)
-                ]),
-                epochs=epochs, batch_size=batchSize
-            )
-
-            self.dayModel.fit(
-                np.array(XDays),
-                np.array(YDays),
-                epochs=epochs, batch_size=batchSize
-            )
+        self.secondModel.fit(
+            np.array([Xseconds+Xminutes+Xhours+Xdays]),
+            np.array([Yseconds]),
+            epochs=epochs,
+            batch_size=batchSize
+        )
+        self.minuteModel.fit(
+            np.array([Xminutes+Xhours+Xdays]),
+            np.array([Yminutes]),
+            epochs=epochs,
+            batch_size=batchSize
+        )
+        self.hourModel.fit(
+            np.array([Xhours+Xdays]),
+            np.array([Yhours]),
+            epochs=epochs,
+            batch_size=batchSize
+        )
+        self.dayModel.fit(
+            np.array([Xdays]),
+            np.array([Ydays]),
+            epochs=epochs,
+            batch_size=batchSize
+        )
     
     def save(self, folderName):
         folderName = 'SavedBots/' + folderName
@@ -220,8 +178,11 @@ class NeuralNetwork():
             keras.models.load_model(f'{folderName}/hourModel.keras', compile=False),
             keras.models.load_model(f'{folderName}/dayModel.keras', compile=False),
         )
-        for model in models:
-            model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
         with open(f'{folderName}/config.json', 'r') as config:
             config = json.load(config)
-        return NeuralNetwork(models=models, **config)
+        return NeuralNetwork(models=models, **config).compile()
+    
+    def compile(self):
+        for model in (self.secondModel, self.minuteModel, self.hourModel, self.dayModel):
+            model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+        return self

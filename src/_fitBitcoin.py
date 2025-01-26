@@ -26,9 +26,14 @@ with kb.Listener(listen) as listener:
 
     while running:
         cprint("new training session started.", 'cyan')
-        print(len(getPrices("BTCUSDT", '1s', 47520050)))
-        #bot.train()
+        bot.train(
+            list(getPrices("BTCUSDT", '1s', 550)),
+            list(getPrices("BTCUSDT", '1m', 550)),
+            list(getPrices("BTCUSDT", '1h', 550)),
+            list(getPrices("BTCUSDT", '1d', 550)),
+        )
         if running:
             time.sleep(5)
 
 bot.save('bitcoin')
+cprint('Bot successfully trained', 'magenta')

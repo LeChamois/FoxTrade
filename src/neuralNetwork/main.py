@@ -114,20 +114,90 @@ class NeuralNetwork():
             batchSize : int = 32,
             ):
         totalTrainable = 1+len(values)-(86400 * (self.inputDim+self.outputDim))
-        if totalTrainable < 0:
-            raise ValueError('Not enough data to train')
+        if totalTrainable < 1:
+            raise ValueError(
+                f"""
+                Not enough data to train.
+                given : {len(values)+1}
+                required : {86400 * (self.inputDim+self.outputDim)}
+                {-totalTrainable} values missing
+                """
+                )
         else:
-            X = []
-            Y = []
+            XSeconds = []
+            YSeconds = []
+            XMinutes = []
+            YMinutes = []
+            XHours = []
+            YHours = []
+            XDays = []
+            YDays = []
             for i in range(totalTrainable):
+
                 sep = i+self.inputDim
-                X.append(values[i : sep])
-                Y.append(values[sep : sep+self.outputDim])
+                XSeconds.append(values[i : sep])
+                YSeconds.append(values[sep : sep+self.outputDim])
+
+                XMinutes.append([])
+                YMinutes.append([])
+                sep = i+(self.inputDim*60)
+                for j in range(i, sep, 60):
+                    XMinutes[-1].append(values[j])
+                for j in range(sep, sep+(self.outputDim*60), 60):
+                    YMinutes[-1].append(values[j])
+                
+                XHours.append([])
+                YHours.append([])
+                sep = i+(self.inputDim*3600)
+                for j in range(i, sep, 3600):
+                    XHours[-1].append(values[j])
+                for j in range(sep, sep+(self.outputDim*3600), 3600):
+                    YHours[-1].append(values[j])
+                
+                XDays.append([])
+                YDays.append([])
+                sep = i+(self.inputDim*86400)
+                for j in range(i, sep, 86400):
+                    XDays[-1].append(values[j])
+                for j in range(sep, sep+(self.outputDim*86400), 86400):
+                    YDays[-1].append(values[j])
+
             
-            X = np.array(X)
-            Y = np.array(Y)
+            self.secondModel.fit(
+                np.array([
+                    XSeconds[i] + XMinutes[i] + XHours[i] + XDays[i] for i in range(totalTrainable)
+                ]),
+                np.array([
+                    YSeconds[i] + YMinutes[i] + YHours[i] + YDays[i] for i in range(totalTrainable)
+                ]),
+                epochs=epochs, batch_size=batchSize
+            )
             
-            self.secondModel.fit(X, Y, epochs=epochs, batch_size=batchSize)
+            self.minuteModel.fit(
+                np.array([
+                    XMinutes[i] + XHours[i] + XDays[i] for i in range(totalTrainable)
+                ]),
+                np.array([
+                    YMinutes[i] + YHours[i] + YDays[i] for i in range(totalTrainable)
+                ]),
+                epochs=epochs, batch_size=batchSize
+            )
+            
+            self.hourModel.fit(
+                np.array([
+                    XHours[i] + XDays[i] for i in range(totalTrainable)
+                ]),
+                np.array([
+                    YHours[i] + YDays[i] for i in range(totalTrainable)
+                ]),
+                epochs=epochs, batch_size=batchSize
+            )
+
+            self.dayModel.fit(
+                np.array(XDays),
+                np.array(YDays),
+                epochs=epochs, batch_size=batchSize
+            )
     
     def save(self, folderName):
         folderName = 'SavedBots/' + folderName

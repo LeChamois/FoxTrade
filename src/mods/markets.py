@@ -3,7 +3,6 @@ from typing import Optional, Tuple, List, Dict
 from datetime import datetime
 import pandas as pd
 import requests
-import pandas as pd
 
 VALID_PERIODS = ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', 'max']
 VALID_INTERVALS = {
@@ -16,7 +15,7 @@ VALID_INTERVALS = {
 def get_historical_prices(
     ticker: str,
     interval: str,  # e.g. '1m', '5m', '1h', '1d'
-    limit: int = 1000,  # e.g. '1d', '5d', '1mo', '3mo'
+    limit: int = 1000,
 ) -> List[float]:
 
     # Endpoint de l'API Binance pour les données de chandeliers
